@@ -1,6 +1,6 @@
 # termway
 
-SSH 先の Linux で動く Wayland GUI アプリを、手元のターミナル（Kitty Graphics Protocol 対応。想定は Ghostty）の中に描画する試作ツールです。
+SSH 先の Linux で動く Wayland GUI アプリを、手元の端末の中に描画する試作ツールです。端末は Kitty Graphics Protocol に対応している必要があり、Ghostty を想定しています。
 
 ヘッドレスの sway を起動し、wlr-screencopy で **変化した部分（damage）だけ** を取り出します。それをセル単位のタイルにして、**送信済みのタイルは再送せず配置命令だけ** を出し、**動いている間は半解像度** で送ります。**スクロールは、送信済みの画像をずらして表示し、新しく見えた帯だけ** を送ります。これにより、毎フレーム全画面を無圧縮で送る方式（Term.Everything）に比べて、転送量を桁違いに減らします。
 
@@ -29,7 +29,7 @@ SSH 先の Linux で動く Wayland GUI アプリを、手元のターミナル�
 
 ### スクロールの最適化の暫定値
 
-less で 1 行ずつ、毎秒 30 行スクロールする「(d) ページスクロール」の Phase 4 です（現在の環境。詳細は [BENCHMARK.md](docs/BENCHMARK.md#暫定計測並列化とスクロールの最適化)）。
+less で 1 行ずつ、毎秒 30 行スクロールする「(d) ページスクロール」を、現在の環境で Phase 4 を使って計測した値です。詳細は [BENCHMARK.md](docs/BENCHMARK.md#暫定計測並列化とスクロールの最適化) にあります。
 
 | 条件 | `--no-scroll-copy` | 既定（スクロールの最適化あり） |
 |---|---:|---:|
@@ -41,7 +41,7 @@ less で 1 行ずつ、毎秒 30 行スクロールする「(d) ページスク�
 
 - サーバー: Linux と distrobox（Bluefin で確認）。GPU は不要（pixman でソフトウェア描画）
 - コンテナ内: sway（1.9 と 1.11 で確認。`zwlr_screencopy_manager_v1` v2 以上と `zwlr_output_manager_v1` が必要）、表示したい Wayland アプリ（例: foot）、Rust 1.82 以降。`--x11` を使うときは Xwayland（24.1 で確認）と、X11 のウィンドウマネージャー（例: i3）
-- クライアント: Kitty Graphics Protocol に対応したターミナル（Ghostty を想定。Sixel は不要）
+- クライアント: Kitty Graphics Protocol に対応した端末（Ghostty を想定。Sixel は不要）
 
 ## セットアップ（Bluefin + distrobox の Ubuntu）
 
@@ -102,10 +102,10 @@ termway -- foot -o font=monospace:pixelsize=15 -o line-height=21px -o letter-spa
   mkdir -p ~/.cache/termway-firefox
   termway -- firefox --new-instance --profile ~/.cache/termway-firefox
   ```
-- **リサイズ**: ターミナルのサイズを変えると追従します（出力解像度を変え、キャッシュを捨てて全画面を再送）。
+- **リサイズ**: 端末のサイズを変えると追従します（出力解像度を変え、キャッシュを捨てて全画面を再送）。
 - **HiDPI**: セルが大きい端末（例: Windows の 200% 表示の WezTerm）では、出力のスケールを自動で上げます（`--scale`）。アプリの文字が端末の文字と同じくらいの大きさになります。
 - **WezTerm**: WezTerm の Kitty graphics は、削除の一部を実装しておらず、同じ画像の配置の扱いも仕様と異なります。また、配置 ID つきの画像があるセルに別の画像を置くと、その画像がセルの中で複製され、繰り返すと指数的に増えて WezTerm が応答しなくなり落ちます（[DESIGN.md](docs/DESIGN.md#wezterm-互換モード--graphics-compat)）。WezTerm 用の出力は、そのような置き方をしません。XTVERSION で WezTerm と分かれば、自動で WezTerm 用の出力に切り替えます。Windows の `ssh.exe` 経由などで判別できないときは、`--graphics-compat wezterm` を指定してください（ログに `graphics compat` の行が出ます）。
-- **Ghostty**: Ghostty 1.3 は、大きな zlib 圧縮の画像を展開するときに落ちることがあります（Ghostty が使う Zig 0.15 の標準ライブラリの不具合。main では修正済み、未リリース）。XTVERSION で Ghostty と分かれば、32 KiB を超える画像（半解像度の画像やスクロールの帯）は PNG で送ります。Ghostty は PNG を別の展開器（wuffs）で読むので、この不具合に当たりません。ログに `images over 32 KiB sent as PNG` の行が出ます。判別できないときは `--large-images png` を指定してください（[DESIGN.md](docs/DESIGN.md#ghostty-13-大きな画像は-png-で送る--large-images)）。
+- **Ghostty**: Ghostty 1.3 は、大きな zlib 圧縮の画像を展開するときに落ちることがあります。Ghostty が使う Zig 0.15 の標準ライブラリの不具合で、main では修正済みですが、まだリリースされていません。XTVERSION で Ghostty と分かれば、32 KiB を超える画像（半解像度の画像やスクロールの帯）は PNG で送ります。Ghostty は PNG を別の展開器（wuffs）で読むので、この不具合に当たりません。ログに `images over 32 KiB sent as PNG` の行が出ます。判別できないときは `--large-images png` を指定してください（[DESIGN.md](docs/DESIGN.md#ghostty-13-大きな画像は-png-で送る--large-images)）。
 - **既存のコンポジターを使う**: `termway --attach wayland-1`（`$XDG_RUNTIME_DIR` からの相対名、またはソケットのパス）。この場合、アプリは起動しません。
 
 ### sway のデスクトップを使う（`--sway-config`）
@@ -134,12 +134,12 @@ exec foot
 
 - **`--` の後ろにコマンドを書かなければ、termway はアプリを起動しません**（設定の `exec` で起動します）。セッションは sway の終了（上の例では Alt+Shift+e）か、終了キーで終わります。foot を閉じても終わりません。コマンドを書いた場合は、これまでどおり、そのアプリが終わるとセッションも終わります。
 - **sway の既定の設定（`/etc/sway/config`）も `~/.config/sway/config` も読み込みません。** 使うのは termway の既定の設定と、指定したファイルだけです。見た目（隙間や色）だけを書いたファイルを渡すと、`exec` もキー割り当てもないので、画面は真っ黒のままです。5 秒たってもウィンドウが 1 つも開かなければ、ログに `no window has opened` と出ます。見た目の設定を別のファイルに分けたいときは、上の例のようなデスクトップ用の設定の最後で `include ~/.config/sway/config` のように読み込んでください。
-- 設定は termway の既定（枠なし、Xwayland 無効、ポインタを隠すなど）のあとに読み込むので、設定ファイルの値が優先されます。ただし、出力の解像度とスケールは、接続したあとに termway が端末に合わせて設定し直します（`--scale`）。設定ファイルの `output` の `mode` と `scale` は効きません。
+- 設定は termway の既定（枠なし、Xwayland 無効、ポインタを隠すなど）のあとに読み込むので、設定ファイルの値が優先されます。ただし、出力の解像度とスケールは、接続したあとに termway が端末に合わせて設定し直します（`--scale`）。設定ファイルの `output` の `mode` と `scale` は反映されません。
 - 設定の誤りは、ログに `sway config: Error on line …` と出ます（sway も画面の上に赤いバーを出します）。**sway の設定では、コメントは行を分けて書いてください。** 行末に `# …` を書くと、その行はまるごとエラーになります。
 - 設定ファイルの中の相対パスの `include` は、その設定ファイルの場所から探します。
 - `--compositor sway` のときだけ使えます。`--attach` とは併用できません。
 - 既定の終了キー ESC は、Alt+キーとは区別されます（ESC の直後に文字が続けば Alt として扱う）。ただし vim などで ESC を使うなら `--quit-key ctrl-]` にしてください。
-- Ubuntu の既定の `/etc/sway/config` は、壁紙（sway-backgrounds パッケージ）がないとエラーになり、Super キーを使います。上の例のような専用の設定を使ってください。
+- Ubuntu の既定の `/etc/sway/config` は、壁紙（sway-backgrounds パッケージ）がないとエラーになり、$mod には Super キーを使います。上の例のような専用の設定を使ってください。
 
 `-- sway -c FILE` で sway の中に sway を起動する（入れ子にする）こともできますが、おすすめしません。sway 1.11（wlroots 0.19）では、内側の sway の画面が、描き直すたびに表示と真っ黒を交互に繰り返します（[既知の制約](#既知の制約)）。また、内側の sway が合成した画面を外側の sway がもう一度合成するので、CPU も余計に使います。
 
@@ -196,7 +196,7 @@ termway --quit-key ctrl-] --x11 -- openbox-session     # ほかの X11 のウィ
 
 ## 既知の制約
 
-- **実機の Ghostty での確認は始めたばかりです。** 開発したサーバーに Ghostty がないためです。macOS の Ghostty から「遅い」「画像がところどころ欠け、そのうち落ちる」という報告がありました。欠けと落ちるのは Ghostty 1.3 の zlib 展開の不具合と特定し、大きな画像を PNG で送るようにしましたが、実機ではまだ確かめていません。WezTerm 用の出力は、WezTerm のソースから作ったモデルで確認したものです。代わりに、Kitty graphics の仕様に沿った端末モデル（`src/sim.rs`）と、pty 上の疑似端末（`fake-term`）で、表示がピクセル単位で一致することを確認しています。
+- **実機の Ghostty での確認は始めたばかりです。** 開発したサーバーに Ghostty がないためです。macOS の Ghostty から「遅い」「画像がところどころ欠け、そのうち落ちる」という報告がありました。画像が欠けることと落ちることは、Ghostty 1.3 の zlib 展開の不具合が原因だと特定し、大きな画像を PNG で送るようにしましたが、実機ではまだ確かめていません。代わりに、Kitty graphics の仕様に沿った端末モデル（`src/sim.rs`）と、pty 上の疑似端末（`fake-term`）で、表示がピクセル単位で一致することを確認しています。WezTerm 用の出力は、WezTerm のソースから作ったモデルで確認したものです。
   - 実機で確認が必要なもの: `d=c`/`d=q`/`d=y`/`d=z`/`d=R` の削除、同じ z の画像 ID 順、`c=`/`r=` による拡大、DEC 2026、SGR-Pixels の座標原点
   - 詳細は [docs/DESIGN.md](docs/DESIGN.md#16-未確認事項前提にしていないことまたは実機で確認が必要なこと)
 - `ext-image-copy-capture-v1` は sway 1.9（wlroots 0.17）にないため、wlr-screencopy だけを使います。
@@ -204,7 +204,7 @@ termway --quit-key ctrl-] --x11 -- openbox-session     # ほかの X11 のウィ
 - cage 0.1.5 は、出力モードを変えると assert で落ちます。`--compositor cage --no-resize-output` なら動きますが、1920×1080 固定になり、端末に合わせて切り取るか黒で埋めることになります。
 - 既定の ESC 終了を使うと、ESC をアプリに送れません（vim などは `--quit-key ctrl-]` を使う）。
 - 入力は従来型の端末エンコードを解析しています。
-  - Ctrl+Shift+英字や Shift+Enter のように、従来型のエンコードでは区別されない組み合わせは、端末が区別して送る場合（xterm の modifyOtherKeys 形式の `CSI 27;…~` と `CSI …u`。Ghostty は Shift/Ctrl/Alt+Shift+Enter をこの形で送る）だけ届きます。termway から端末に拡張キーボードプロトコルを要求はしていません
+  - Ctrl+Shift+英字や Shift+Enter のように、従来型のエンコードでは区別されない組み合わせは、端末が区別して送る場合だけ届きます。区別して送る形式は、xterm の modifyOtherKeys 形式の `CSI 27;…~` と `CSI …u` で、Ghostty は Shift/Ctrl/Alt+Shift+Enter をこの形で送ります。termway から端末に拡張キーボードプロトコルを要求はしていません
   - キーは押下と同時に解放するため、キーリピートや長押しは再現できません
   - キーボード配列は US 固定です。US 配列にない文字（IME の確定文字列など）は、キーマップを動的に追加して送ります（Xwayland 無効のため X11 アプリは対象外）
 - headless 出力にはハードウェアカーソルがないため、sway のポインタがフレームに描き込まれます。1 秒操作がないときとタイピング中は隠します。アプリが指定するカーソル形状は、端末側のポインタには反映されません。
@@ -266,7 +266,7 @@ OUT=target/bench/hidpi_off COLS=190 ROWS=45 CELL=20x42 PHASES=4 SCENARIOS="scrol
 | `src/sim.rs` | テストと計測に使う端末モデル |
 | `src/bin/fake-term.rs` | 計測と E2E 用の疑似端末 |
 
-設計判断は [docs/DESIGN.md](docs/DESIGN.md) にまとめています（Phase 5 の分離構成のメモもここにあります）。
+設計判断は [docs/DESIGN.md](docs/DESIGN.md) にまとめています。Phase 5 の分離構成のメモもここにあります。
 
 ## ライセンス
 
