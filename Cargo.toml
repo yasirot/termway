@@ -1,0 +1,23 @@
+[package]
+name = "termway"
+version = "0.1.0"
+edition = "2021"
+rust-version = "1.82"
+description = "Display headless Wayland apps inside a terminal via the Kitty graphics protocol, with damage tracking and tile caching"
+license = "MIT OR Apache-2.0"
+
+[dependencies]
+wayland-client = "0.31"
+# The "log" feature keeps wayland-backend from eprintln!-ing onto the terminal.
+wayland-backend = { version = "0.3", features = ["log"] }
+log = "0.4"
+wayland-protocols-wlr = { version = "0.3", features = ["client"] }
+wayland-protocols-misc = { version = "0.3", features = ["client"] }
+flate2 = { version = "1", default-features = false, features = ["zlib-rs"] }
+rustix = { version = "1", features = ["termios", "event", "fs", "mm", "pty", "process", "pipe", "stdio"] }
+libc = "0.2"
+xxhash-rust = { version = "0.8", features = ["xxh3"] }
+
+[profile.release]
+debug = 1
+panic = "unwind"

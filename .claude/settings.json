@@ -1,0 +1,11 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(docker image ls *)",
+      "Bash(unzip -l *)",
+      "Bash(docker history *)",
+      "Bash(pandoc --version)",
+      "Bash(pdfinfo *)"
+    ]
+  }
+}
