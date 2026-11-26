@@ -31,6 +31,7 @@ fake-term --decode --emulate wezterm --cols 96 --rows 24 --cell 20x42 --duration
   --send-at '1.5:echo attach-one\r' -- termway --attach "$RT/wayland-1" --dump-frame a1.frame.ppm
 fake-term --decode --cols 120 --rows 30 --cell 9x21 --duration 5 --snapshot a2.sim.ppm \
   --send-at '1.5:echo attach-two\r' -- termway --attach "$RT/wayland-1" --dump-frame a2.frame.ppm
+fake-term --compare a1.frame.ppm a1.sim.ppm
 fake-term --compare a2.frame.ppm a2.sim.ppm
 ```
 
@@ -266,7 +267,7 @@ e2e（`scripts/e2e.sh`）: 利用者のセッションと混ざらないよう�
 |---|---|---|
 | 既定の動き | (a) `termway -- CMD` は単発モードのままにして、残したいときだけ `new`／`attach` を使う (b) 常にセッションにする | (a)。今の使い方と e2e を変えずに済む。切断後に残ったものは生存確認で片付く |
 | セッション中の終了キー | (a) 既定で無効（終えるのはアプリの終了か `kill`） (b) 今と同じ ESC | (a)。ESC の打ち間違いで Firefox ごと消えないようにする |
-| 2 つ目の端末からのアタッチ | (a) 横取りする (b) 拒否する（`-d` を付けたときだけ横取りする） | (a)。distrobox の切断で残ったクライアントを、自動で追い出せる |
+| 2 つ目の端末からのアタッチ | (a) 横取りする (b) 拒否する（横取りを指定するオプションを付けたときだけ横取りする） | (a)。distrobox の切断で残ったクライアントを、自動で追い出せる |
 | 生存確認のタイムアウト | 4.5 節の提案値（セッション 30 秒、単発モード 120 秒） | 実機で調整する |
 
 ## 10. 範囲外
