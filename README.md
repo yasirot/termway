@@ -267,3 +267,7 @@ OUT=target/bench/hidpi_off COLS=190 ROWS=45 CELL=20x42 PHASES=4 SCENARIOS="scrol
 | `src/bin/fake-term.rs` | 計測と E2E 用の疑似端末 |
 
 設計判断は [docs/DESIGN.md](docs/DESIGN.md) にまとめています（Phase 5 の分離構成のメモもここにあります）。
+
+## ライセンス
+
+MIT License と Apache License 2.0 のどちらかを選んで使えます。条文は [LICENSE-MIT](LICENSE-MIT) と [LICENSE-APACHE](LICENSE-APACHE) にあります。
